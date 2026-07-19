@@ -5,35 +5,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Segoy Mart</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #1e3a8a, #3b82f6); }
+    </style>
 </head>
-<body class="bg-gray-100 p-4">
+<body class="bg-gray-100 pb-20">
 
-    <div id="app" class="max-w-sm mx-auto">
-        <h1 class="text-xl font-bold mb-4">Kasir Segoy Mart</h1>
-        
-        <!-- Input Barang Baru -->
+    <!-- Dashboard -->
+    <div id="page-dashboard">
+        <div class="gradient-bg p-6 text-white rounded-b-3xl shadow-lg">
+            <h1 class="text-xl font-bold">SEGOY MART</h1>
+            <p class="text-sm opacity-80">Dashboard Kasir</p>
+        </div>
+        <div class="p-4 -mt-4">
+            <div class="bg-blue-900 p-6 rounded-2xl text-white shadow-xl mb-6">
+                <p class="text-sm opacity-80">Omzet Hari Ini</p>
+                <h2 class="text-3xl font-bold my-2" id="displayTotal">Rp 0</h2>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="pindah('page-kasir')" class="bg-white p-6 rounded-2xl shadow border text-center font-bold">Menu Kasir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kasir -->
+    <div id="page-kasir" class="hidden p-4">
+        <h2 class="text-xl font-bold mb-4">Kasir</h2>
         <div class="bg-white p-4 rounded-xl shadow mb-4">
             <input type="text" id="nama" placeholder="Nama Produk" class="w-full border p-2 mb-2 rounded">
             <input type="number" id="harga" placeholder="Harga" class="w-full border p-2 mb-2 rounded">
-            <button onclick="tambahBarang()" class="w-full bg-green-600 text-white py-2 rounded">Tambah ke Menu</button>
+            <button onclick="tambahBarang()" class="w-full bg-green-600 text-white py-2 rounded font-bold">Tambah ke Menu</button>
         </div>
-
-        <!-- Daftar Menu (Yang diklik) -->
         <div id="menuBarang" class="grid grid-cols-2 gap-2 mb-4"></div>
-
-        <!-- Keranjang Transaksi -->
         <div class="bg-white p-4 rounded-xl shadow">
             <h2 class="font-bold mb-2">Keranjang</h2>
             <div id="keranjang"></div>
             <hr class="my-2">
-            <p id="totalHarga" class="font-bold text-lg">Total: Rp0</p>
-            <button onclick="resetKeranjang()" class="mt-2 w-full bg-red-500 text-white py-1 rounded text-sm">Reset Keranjang</button>
+            <p id="totalHarga" class="font-bold text-lg mb-4">Total: Rp0</p>
+            <input type="number" id="uangDibayar" placeholder="Uang Dibayar" class="w-full border p-2 mb-2 rounded" oninput="hitungKembalian()">
+            <p id="hasilKembalian" class="font-semibold text-blue-600 mb-2">Kembalian: Rp0</p>
+            <button onclick="resetKeranjang()" class="w-full bg-red-500 text-white py-2 rounded">Reset</button>
+            <button onclick="pindah('page-dashboard')" class="mt-2 w-full bg-gray-500 text-white py-2 rounded">Kembali</button>
         </div>
     </div>
 
     <script>
         let menu = JSON.parse(localStorage.getItem('menu')) || [];
         let keranjang = [];
+
+        function pindah(id) {
+            document.getElementById('page-dashboard').classList.add('hidden');
+            document.getElementById('page-kasir').classList.add('hidden');
+            document.getElementById(id).classList.remove('hidden');
+        }
 
         function tambahBarang() {
             let nama = document.getElementById('nama').value;
@@ -50,26 +74,33 @@
             renderKeranjang();
         }
 
-        function resetKeranjang() {
-            keranjang = [];
-            renderKeranjang();
+        function hitungKembalian() {
+            let total = keranjang.reduce((sum, item) => sum + item.harga, 0);
+            let bayar = parseInt(document.getElementById('uangDibayar').value) || 0;
+            let kembali = bayar - total;
+            document.getElementById('hasilKembalian').innerText = "Kembalian: Rp" + (kembali > 0 ? kembali : 0);
         }
 
         function renderMenu() {
             document.getElementById('menuBarang').innerHTML = menu.map((p, i) => 
-                `<button onclick="klikProduk(${i})" class="bg-white p-4 rounded shadow text-center border hover:bg-gray-50">
+                `<button onclick="klikProduk(${i})" class="bg-white p-4 rounded shadow text-center border">
                     <p class="font-bold">${p.nama}</p>
                     <p class="text-sm text-gray-600">Rp${p.harga}</p>
                 </button>`).join('');
         }
 
         function renderKeranjang() {
-            let total = 0;
-            document.getElementById('keranjang').innerHTML = keranjang.map(p => {
-                total += p.harga;
-                return `<p class="text-sm">${p.nama} - Rp${p.harga}</p>`;
-            }).join('');
+            let total = keranjang.reduce((sum, item) => sum + item.harga, 0);
+            document.getElementById('keranjang').innerHTML = keranjang.map(p => 
+                `<p class="text-sm">${p.nama} - Rp${p.harga}</p>`).join('');
             document.getElementById('totalHarga').innerText = "Total: Rp" + total;
+            document.getElementById('displayTotal').innerText = "Rp" + total;
+            hitungKembalian();
+        }
+
+        function resetKeranjang() {
+            keranjang = [];
+            renderKeranjang();
         }
 
         renderMenu();
