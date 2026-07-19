@@ -6,7 +6,7 @@
     <title>Segoy Mart</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 p-4 transition-colors duration-300">
+<body class="bg-gray-100 p-4">
 
     <div id="app" class="max-w-sm mx-auto">
         <!-- Login -->
@@ -21,38 +21,46 @@
             <h1 class="text-xl font-bold mb-4">Segoy Mart</h1>
             
             <div class="bg-white p-4 rounded-xl shadow mb-4">
-                <h2 class="font-bold mb-2">Tambah Produk Baru</h2>
                 <input type="text" id="namaProduk" placeholder="Nama Barang" class="w-full border p-2 mb-2 rounded">
                 <input type="number" id="hargaProduk" placeholder="Harga" class="w-full border p-2 mb-2 rounded">
-                <button onclick="tambahProduk()" class="w-full bg-green-600 text-white py-2 rounded">Simpan Produk</button>
+                <!-- Dropdown Kategori -->
+                <select id="kategoriProduk" class="w-full border p-2 mb-2 rounded">
+                    <option value="Makanan">Makanan</option>
+                    <option value="Minuman">Minuman</option>
+                    <option value="Lainnya">Lainnya</option>
+                </select>
+                <button onclick="simpanProduk()" class="w-full bg-green-600 text-white py-2 rounded">Simpan Produk</button>
             </div>
 
-            <div id="daftarProduk" class="bg-white p-4 rounded-xl shadow">
-                <h2 class="font-bold mb-2">Daftar Jualan</h2>
-                <!-- Produk akan muncul di sini -->
-            </div>
+            <div id="daftarProduk" class="bg-white p-4 rounded-xl shadow"></div>
         </div>
     </div>
 
     <script>
+        let produkList = JSON.parse(localStorage.getItem('produk')) || [];
+
         function login() {
             if(document.getElementById('pass').value === "123") {
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('dashboard').classList.remove('hidden');
+                render();
             } else { alert("Password salah!"); }
         }
 
-        let produkList = [];
-        function tambahProduk() {
+        function simpanProduk() {
             let nama = document.getElementById('namaProduk').value;
             let harga = document.getElementById('hargaProduk').value;
-            produkList.push({nama, harga});
-            tampilkanProduk();
+            let kategori = document.getElementById('kategoriProduk').value;
+            if(nama && harga) {
+                produkList.push({nama, harga, kategori});
+                localStorage.setItem('produk', JSON.stringify(produkList));
+                render();
+            }
         }
 
-        function tampilkanProduk() {
-            let list = document.getElementById('daftarProduk');
-            list.innerHTML = produkList.map(p => `<p class="border-b py-1">${p.nama} - Rp${p.harga}</p>`).join('');
+        function render() {
+            document.getElementById('daftarProduk').innerHTML = produkList.map(p => 
+                `<p class="border-b py-2"><strong>[${p.kategori}]</strong> ${p.nama} - Rp${p.harga}</p>`).join('');
         }
     </script>
 </body>
