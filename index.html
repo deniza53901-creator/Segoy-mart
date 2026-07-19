@@ -1,57 +1,65 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Segoy Mart</title>
+    <title>Segoy Mart - Kasir Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .gradient-bg { background: linear-gradient(135deg, #1e3a8a, #3b82f6); }
-    </style>
 </head>
-<body class="bg-gray-100 pb-20">
+<body class="bg-gray-100 min-h-screen">
 
     <!-- Dashboard -->
-    <div id="page-dashboard">
-        <div class="gradient-bg p-6 text-white rounded-b-3xl shadow-lg">
-            <h1 class="text-xl font-bold">SEGOY MART</h1>
-            <p class="text-sm opacity-80">Dashboard Kasir</p>
-        </div>
-        <div class="p-4 -mt-4">
-            <div class="bg-blue-900 p-6 rounded-2xl text-white shadow-xl mb-6">
-                <p class="text-sm opacity-80">Omzet Hari Ini</p>
-                <h2 class="text-3xl font-bold my-2" id="displayTotal">Rp 0</h2>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-                <button onclick="pindah('page-kasir')" class="bg-white p-6 rounded-2xl shadow border text-center font-bold">Menu Kasir</button>
+    <div id="page-dashboard" class="p-4">
+        <div class="bg-blue-800 text-white p-6 rounded-2xl shadow-lg mb-6">
+            <h1 class="text-2xl font-bold">Segoy Mart</h1>
+            <p class="text-blue-200">Dashboard Kasir Pro</p>
+            <div class="mt-4 grid grid-cols-2 gap-2">
+                <div class="bg-blue-700 p-3 rounded-lg"><p class="text-xs">Omzet</p><h2 class="text-lg font-bold" id="displayOmzet">Rp 0</h2></div>
+                <div class="bg-blue-700 p-3 rounded-lg"><p class="text-xs">Transaksi</p><h2 class="text-lg font-bold" id="displayTotalTrx">0</h2></div>
             </div>
         </div>
+        <button onclick="pindah('page-kasir')" class="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg">Buka Kasir</button>
     </div>
 
     <!-- Kasir -->
     <div id="page-kasir" class="hidden p-4">
-        <h2 class="text-xl font-bold mb-4">Kasir</h2>
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold">Kasir</h2>
+            <button onclick="pindah('page-dashboard')" class="text-gray-500 underline">Dashboard</button>
+        </div>
+
+        <!-- Kelola Produk -->
         <div class="bg-white p-4 rounded-xl shadow mb-4">
+            <h3 class="font-bold mb-2">Tambah Produk</h3>
             <input type="text" id="nama" placeholder="Nama Produk" class="w-full border p-2 mb-2 rounded">
             <input type="number" id="harga" placeholder="Harga" class="w-full border p-2 mb-2 rounded">
-            <button onclick="tambahBarang()" class="w-full bg-green-600 text-white py-2 rounded font-bold">Tambah ke Menu</button>
+            <input type="number" id="stok" placeholder="Stok" class="w-full border p-2 mb-2 rounded">
+            <button onclick="tambahBarang()" class="w-full bg-blue-600 text-white py-2 rounded font-bold">Tambah / Update Produk</button>
         </div>
-        <div id="menuBarang" class="grid grid-cols-2 gap-2 mb-4"></div>
+
+        <input type="text" id="search" placeholder="🔍 Cari produk..." class="w-full border p-2 mb-4 rounded" oninput="renderMenu()">
+        <div id="menuBarang" class="space-y-2 mb-6"></div>
+
+        <!-- Keranjang -->
         <div class="bg-white p-4 rounded-xl shadow">
-            <h2 class="font-bold mb-2">Keranjang</h2>
-            <div id="keranjang"></div>
-            <hr class="my-2">
-            <p id="totalHarga" class="font-bold text-lg mb-4">Total: Rp0</p>
-            <input type="number" id="uangDibayar" placeholder="Uang Dibayar" class="w-full border p-2 mb-2 rounded" oninput="hitungKembalian()">
-            <p id="hasilKembalian" class="font-semibold text-blue-600 mb-2">Kembalian: Rp0</p>
-            <button onclick="resetKeranjang()" class="w-full bg-red-500 text-white py-2 rounded">Reset</button>
-            <button onclick="pindah('page-dashboard')" class="mt-2 w-full bg-gray-500 text-white py-2 rounded">Kembali</button>
+            <h3 class="font-bold mb-2">Keranjang</h3>
+            <div id="keranjangList"></div>
+            <div class="border-t mt-4 pt-2">
+                <p class="text-xl font-bold mb-2" id="totalHarga">Total: Rp 0</p>
+                <input type="number" id="uangBayar" placeholder="Uang Bayar" class="w-full border p-2 mb-2 rounded" oninput="updatePembayaran()">
+                <p id="infoBayar" class="font-bold text-blue-600 mb-4">Kembalian: Rp 0</p>
+                <button onclick="prosesBayar()" class="w-full bg-green-600 text-white py-4 rounded-xl font-bold">BAYAR SEKARANG</button>
+            </div>
         </div>
     </div>
 
     <script>
+        // State Management
         let menu = JSON.parse(localStorage.getItem('menu')) || [];
         let keranjang = [];
+        let omzet = parseInt(localStorage.getItem('omzet')) || 0;
+        let totalTrx = parseInt(localStorage.getItem('totalTrx')) || 0;
 
         function pindah(id) {
             document.getElementById('page-dashboard').classList.add('hidden');
@@ -59,50 +67,99 @@
             document.getElementById(id).classList.remove('hidden');
         }
 
+        function formatRupiah(num) { return "Rp " + num.toLocaleString('id-ID'); }
+
         function tambahBarang() {
             let nama = document.getElementById('nama').value;
             let harga = parseInt(document.getElementById('harga').value);
-            if(nama && harga) {
-                menu.push({nama, harga});
+            let stok = parseInt(document.getElementById('stok').value);
+            if(nama && harga > 0 && stok >= 0) {
+                let index = menu.findIndex(p => p.nama.toLowerCase() === nama.toLowerCase());
+                if(index > -1) { menu[index] = {id: menu[index].id, nama, harga, stok}; }
+                else { menu.push({id: Date.now(), nama, harga, stok}); }
                 localStorage.setItem('menu', JSON.stringify(menu));
+                document.getElementById('nama').value = ''; document.getElementById('harga').value = ''; document.getElementById('stok').value = '';
                 renderMenu();
-            }
+            } else { alert("Data tidak valid!"); }
         }
 
-        function klikProduk(index) {
-            keranjang.push(menu[index]);
+        function hapusProduk(id) {
+            menu = menu.filter(p => p.id !== id);
+            localStorage.setItem('menu', JSON.stringify(menu));
+            renderMenu();
+        }
+
+        function tambahKeKeranjang(id) {
+            let item = menu.find(p => p.id === id);
+            if(item.stok <= 0) { alert("Stok habis!"); return; }
+            let ada = keranjang.find(p => p.id === id);
+            if(ada) ada.qty++;
+            else keranjang.push({...item, qty: 1});
             renderKeranjang();
         }
 
-        function hitungKembalian() {
-            let total = keranjang.reduce((sum, item) => sum + item.harga, 0);
-            let bayar = parseInt(document.getElementById('uangDibayar').value) || 0;
-            let kembali = bayar - total;
-            document.getElementById('hasilKembalian').innerText = "Kembalian: Rp" + (kembali > 0 ? kembali : 0);
+        function updateQty(id, delta) {
+            let item = keranjang.find(p => p.id === id);
+            item.qty += delta;
+            if(item.qty <= 0) keranjang = keranjang.filter(p => p.id !== id);
+            renderKeranjang();
         }
 
         function renderMenu() {
-            document.getElementById('menuBarang').innerHTML = menu.map((p, i) => 
-                `<button onclick="klikProduk(${i})" class="bg-white p-4 rounded shadow text-center border">
-                    <p class="font-bold">${p.nama}</p>
-                    <p class="text-sm text-gray-600">Rp${p.harga}</p>
-                </button>`).join('');
+            let filter = document.getElementById('search').value.toLowerCase();
+            document.getElementById('menuBarang').innerHTML = menu.filter(p => p.nama.toLowerCase().includes(filter)).map(p => `
+                <div class="flex justify-between items-center bg-white p-3 rounded-lg border shadow-sm">
+                    <div><p class="font-bold">${p.nama}</p><p class="text-sm text-gray-500">${formatRupiah(p.harga)} | Stok: ${p.stok}</p></div>
+                    <div class="flex gap-1">
+                        <button onclick="tambahKeKeranjang(${p.id})" class="bg-blue-500 text-white px-3 py-1 rounded">+</button>
+                        <button onclick="hapusProduk(${p.id})" class="bg-red-500 text-white px-3 py-1 rounded">🗑</button>
+                    </div>
+                </div>`).join('');
         }
 
         function renderKeranjang() {
-            let total = keranjang.reduce((sum, item) => sum + item.harga, 0);
-            document.getElementById('keranjang').innerHTML = keranjang.map(p => 
-                `<p class="text-sm">${p.nama} - Rp${p.harga}</p>`).join('');
-            document.getElementById('totalHarga').innerText = "Total: Rp" + total;
-            document.getElementById('displayTotal').innerText = "Rp" + total;
-            hitungKembalian();
+            let total = keranjang.reduce((s, i) => s + (i.harga * i.qty), 0);
+            document.getElementById('keranjangList').innerHTML = keranjang.map(i => `
+                <div class="flex justify-between items-center mb-2 text-sm">
+                    <p>${i.nama} (${i.qty})</p>
+                    <div class="flex items-center gap-2">
+                        <span>${formatRupiah(i.harga * i.qty)}</span>
+                        <button onclick="updateQty(${i.id}, -1)" class="bg-gray-200 px-2 rounded">-</button>
+                        <button onclick="updateQty(${i.id}, 1)" class="bg-gray-200 px-2 rounded">+</button>
+                    </div>
+                </div>`).join('');
+            document.getElementById('totalHarga').innerText = "Total: " + formatRupiah(total);
+            updatePembayaran();
         }
 
-        function resetKeranjang() {
-            keranjang = [];
-            renderKeranjang();
+        function updatePembayaran() {
+            let total = keranjang.reduce((s, i) => s + (i.harga * i.qty), 0);
+            let bayar = parseInt(document.getElementById('uangBayar').value) || 0;
+            let selisih = bayar - total;
+            document.getElementById('infoBayar').innerText = (selisih >= 0 ? "Kembalian: " : "Kekurangan: ") + formatRupiah(Math.abs(selisih));
         }
 
+        function prosesBayar() {
+            let total = keranjang.reduce((s, i) => s + (i.harga * i.qty), 0);
+            let bayar = parseInt(document.getElementById('uangBayar').value) || 0;
+            if(keranjang.length === 0) { alert("Keranjang kosong!"); return; }
+            if(bayar >= total) {
+                keranjang.forEach(k => {
+                    let m = menu.find(p => p.id === k.id);
+                    if(m) m.stok -= k.qty;
+                });
+                omzet += total; totalTrx++;
+                localStorage.setItem('omzet', omzet); localStorage.setItem('totalTrx', totalTrx);
+                localStorage.setItem('menu', JSON.stringify(menu));
+                keranjang = []; alert("Transaksi Berhasil!");
+                renderKeranjang(); renderMenu();
+                document.getElementById('displayOmzet').innerText = formatRupiah(omzet);
+                document.getElementById('displayTotalTrx').innerText = totalTrx;
+            } else { alert("Uang kurang!"); }
+        }
+
+        document.getElementById('displayOmzet').innerText = formatRupiah(omzet);
+        document.getElementById('displayTotalTrx').innerText = totalTrx;
         renderMenu();
     </script>
 </body>
