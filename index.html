@@ -1,155 +1,58 @@
-        // Manajemen Keranjang Kasir
-        function addToCart(productId) {
-            const product = products.find(p => p.id ;<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Segoy Mart</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        // Fitur Mode Gelap
-        function toggleDarkMode() {
-            document.body.classList.toggle('dark');
-            document.body.classList.toggle('bg-gray-900');
-            document.body.classList.toggle('text-white');
-        }
-    </script>
 </head>
-<body class="bg-gray-100 transition-colors duration-300 p-4">
+<body class="bg-gray-100 p-4 transition-colors duration-300">
 
-    <!-- Tombol Mode Gelap -->
-    <div class="flex justify-end mb-4">
-        <button onclick="toggleDarkMode()" class="bg-gray-800 text-white px-3 py-1 rounded-lg text-xs">🌙 Mode Gelap</button>
-    </div>
+    <div id="app" class="max-w-sm mx-auto">
+        <!-- Login -->
+        <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl mt-20">
+            <h2 class="text-xl font-bold mb-4 text-center">Login Segoy Mart</h2>
+            <input type="password" id="pass" class="w-full border p-2 rounded-lg mb-4" placeholder="Password">
+            <button onclick="login()" class="w-full bg-blue-600 text-white py-2 rounded-lg font-bold">Masuk</button>
+        </div>
 
-    <!-- Login Sederhana -->
-    <div id="login-screen" class="max-w-sm mx-auto bg-white p-6 rounded-2xl shadow-xl mt-20">
-        <h2 class="text-xl font-bold mb-4 text-center">Login Segoy Mart</h2>
-        <input type="password" id="password" placeholder="Masukkan Password" class="w-full border p-2 rounded-lg mb-4 text-black">
-        <button onclick="checkLogin()" class="w-full bg-blue-600 text-white py-2 rounded-lg font-bold">Masuk</button>
-    </div>
+        <!-- Dashboard -->
+        <div id="dashboard" class="hidden">
+            <h1 class="text-xl font-bold mb-4">Segoy Mart</h1>
+            
+            <div class="bg-white p-4 rounded-xl shadow mb-4">
+                <h2 class="font-bold mb-2">Tambah Produk Baru</h2>
+                <input type="text" id="namaProduk" placeholder="Nama Barang" class="w-full border p-2 mb-2 rounded">
+                <input type="number" id="hargaProduk" placeholder="Harga" class="w-full border p-2 mb-2 rounded">
+                <button onclick="tambahProduk()" class="w-full bg-green-600 text-white py-2 rounded">Simpan Produk</button>
+            </div>
 
-    <!-- Dashboard (Akan muncul setelah login) -->
-    <div id="dashboard" class="hidden">
-        <h1 class="text-xl font-bold">BATAGOR TENGGIRI</h1>
-        <p class="text-sm text-gray-500 mb-4">Selamat Datang, Pemilik</p>
-        
-        <!-- Aksi Cepat -->
-        <div class="grid grid-cols-4 gap-2 mb-6">
-            <div class="bg-white p-4 rounded-xl shadow text-center text-xs">📦 Kasir</div>
-            <div class="bg-white p-4 rounded-xl shadow text-center text-xs">➕ Produk</div>
-            <div class="bg-white p-4 rounded-xl shadow text-center text-xs">🧾 Keluar</div>
-            <div class="bg-white p-4 rounded-xl shadow text-center text-xs">📊 Laporan</div>
+            <div id="daftarProduk" class="bg-white p-4 rounded-xl shadow">
+                <h2 class="font-bold mb-2">Daftar Jualan</h2>
+                <!-- Produk akan muncul di sini -->
+            </div>
         </div>
     </div>
 
     <script>
-        function checkLogin() {
-            const pass = document.getElementById('password').value;
-            if (pass === "123") { // Password contoh
+        function login() {
+            if(document.getElementById('pass').value === "123") {
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('dashboard').classList.remove('hidden');
-            } else {
-                alert("Password salah, coba lagi!");
-            }
-        }
-    </script>
-</body>
-</html>
-
-            if(exists) {
-                exists.qty++;
-            } else {
-                cart.push({ ...product, qty: 1 });
-            }
-            updateCartUI();
+            } else { alert("Password salah!"); }
         }
 
-        function changeQty(id, delta) {
-            const item = cart.find(i => i.id === id);
-            if(item) {
-                item.qty += delta;
-                if(item.qty <= 0) {
-                    cart = cart.filter(i => i.id !== id);
-                }
-            }
-            updateCartUI();
+        let produkList = [];
+        function tambahProduk() {
+            let nama = document.getElementById('namaProduk').value;
+            let harga = document.getElementById('hargaProduk').value;
+            produkList.push({nama, harga});
+            tampilkanProduk();
         }
 
-        function updateCartUI() {
-            const container = document.getElementById('cart-items');
-            if(cart.length === 0) {
-                container.innerHTML = `<p class="text-center text-sm text-slate-400 my-8">Keranjang masih kosong</p>`;
-                document.getElementById('cart-total').innerText = "Rp 0";
-                calculateChange();
-                return;
-            }
-
-            let total = 0;
-            container.innerHTML = cart.map(item => {
-                const subtotal = item.price * item.qty;
-                total += subtotal;
-                return `
-                    <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
-                        <div>
-                            <h5 class="font-bold text-sm text-slate-800">${item.name}</h5>
-                            <p class="text-xs text-slate-400">Rp ${item.price.toLocaleString('id-ID')} x ${item.qty}</p>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <span class="font-extrabold text-sm text-slate-800">Rp ${subtotal.toLocaleString('id-ID')}</span>
-                            <div class="flex items-center border border-slate-200 bg-white rounded-lg overflow-hidden">
-                                <button onclick="changeQty(${item.id}, -1)" class="px-2 py-0.5 bg-slate-50 hover:bg-slate-100 font-bold text-xs">-</button>
-                                <span class="px-2 text-xs font-bold text-slate-700">${item.qty}</span>
-                                <button onclick="changeQty(${item.id}, 1)" class="px-2 py-0.5 bg-slate-50 hover:bg-slate-100 font-bold text-xs">+</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-            
-            document.getElementById('cart-total').innerText = "Rp " + total.toLocaleString('id-ID');
-            calculateChange();
-        }
-
-        // Hitung Kembalian Otomatis
-        function calculateChange() {
-            let total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            let cash = parseFloat(document.getElementById('cash-input').value) || 0;
-            let change = cash - total;
-            
-            if(change < 0 || total === 0) {
-                document.getElementById('cash-change').innerText = "Rp 0";
-            } else {
-                document.getElementById('cash-change').innerText = "Rp " + change.toLocaleString('id-ID');
-            }
-        }
-
-        // Proses Checkout Transaksi & Update Keuntungan Finansial
-        function checkout() {
-            if(cart.length === 0) return alert("Keranjang kosong!");
-            let total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            let cash = parseFloat(document.getElementById('cash-input').value) || 0;
-            
-            if(cash < total) return alert("Uang tunai pembayaran kurang!");
-
-            // Hitung Omzet & Laba Bersih internal
-            cart.forEach(item => {
-                totalOmzet += (item.price * item.qty);
-                totalLaba += ((item.price - item.cost) * item.qty);
-            });
-
-            // Update Panel Keuangan Owner secara Realtime
-            document.getElementById('stat-omzet').innerText = "Rp " + totalOmzet.toLocaleString('id-ID');
-            let labaBersihReal = totalLaba - fixedPengeluaran;
-            document.getElementById('stat-laba').innerText = (labaBersihReal < 0 ? "-" : "") + "Rp " + Math.abs(labaBersihReal).toLocaleString('id-ID');
-
-            alert("Transaksi Sukses!\nStruk berhasil dicetak ke sistem kasir Segoy Mart.");
-            
-            // Reset Kasir kembali kosong
-            cart = [];
-            document.getElementById('cash-input').value = "";
-            updateCartUI();
+        function tampilkanProduk() {
+            let list = document.getElementById('daftarProduk');
+            list.innerHTML = produkList.map(p => `<p class="border-b py-1">${p.nama} - Rp${p.harga}</p>`).join('');
         }
     </script>
 </body>
