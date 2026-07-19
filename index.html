@@ -9,59 +9,70 @@
 <body class="bg-gray-100 p-4">
 
     <div id="app" class="max-w-sm mx-auto">
-        <!-- Login -->
-        <div id="login-screen" class="bg-white p-6 rounded-2xl shadow-xl mt-20">
-            <h2 class="text-xl font-bold mb-4 text-center">Login Segoy Mart</h2>
-            <input type="password" id="pass" class="w-full border p-2 rounded-lg mb-4" placeholder="Password">
-            <button onclick="login()" class="w-full bg-blue-600 text-white py-2 rounded-lg font-bold">Masuk</button>
+        <h1 class="text-xl font-bold mb-4">Kasir Segoy Mart</h1>
+        
+        <!-- Input Barang Baru -->
+        <div class="bg-white p-4 rounded-xl shadow mb-4">
+            <input type="text" id="nama" placeholder="Nama Produk" class="w-full border p-2 mb-2 rounded">
+            <input type="number" id="harga" placeholder="Harga" class="w-full border p-2 mb-2 rounded">
+            <button onclick="tambahBarang()" class="w-full bg-green-600 text-white py-2 rounded">Tambah ke Menu</button>
         </div>
 
-        <!-- Dashboard -->
-        <div id="dashboard" class="hidden">
-            <h1 class="text-xl font-bold mb-4">Segoy Mart</h1>
-            
-            <div class="bg-white p-4 rounded-xl shadow mb-4">
-                <input type="text" id="namaProduk" placeholder="Nama Barang" class="w-full border p-2 mb-2 rounded">
-                <input type="number" id="hargaProduk" placeholder="Harga" class="w-full border p-2 mb-2 rounded">
-                <!-- Dropdown Kategori -->
-                <select id="kategoriProduk" class="w-full border p-2 mb-2 rounded">
-                    <option value="Makanan">Makanan</option>
-                    <option value="Minuman">Minuman</option>
-                    <option value="Lainnya">Lainnya</option>
-                </select>
-                <button onclick="simpanProduk()" class="w-full bg-green-600 text-white py-2 rounded">Simpan Produk</button>
-            </div>
+        <!-- Daftar Menu (Yang diklik) -->
+        <div id="menuBarang" class="grid grid-cols-2 gap-2 mb-4"></div>
 
-            <div id="daftarProduk" class="bg-white p-4 rounded-xl shadow"></div>
+        <!-- Keranjang Transaksi -->
+        <div class="bg-white p-4 rounded-xl shadow">
+            <h2 class="font-bold mb-2">Keranjang</h2>
+            <div id="keranjang"></div>
+            <hr class="my-2">
+            <p id="totalHarga" class="font-bold text-lg">Total: Rp0</p>
+            <button onclick="resetKeranjang()" class="mt-2 w-full bg-red-500 text-white py-1 rounded text-sm">Reset Keranjang</button>
         </div>
     </div>
 
     <script>
-        let produkList = JSON.parse(localStorage.getItem('produk')) || [];
+        let menu = JSON.parse(localStorage.getItem('menu')) || [];
+        let keranjang = [];
 
-        function login() {
-            if(document.getElementById('pass').value === "123") {
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('dashboard').classList.remove('hidden');
-                render();
-            } else { alert("Password salah!"); }
-        }
-
-        function simpanProduk() {
-            let nama = document.getElementById('namaProduk').value;
-            let harga = document.getElementById('hargaProduk').value;
-            let kategori = document.getElementById('kategoriProduk').value;
+        function tambahBarang() {
+            let nama = document.getElementById('nama').value;
+            let harga = parseInt(document.getElementById('harga').value);
             if(nama && harga) {
-                produkList.push({nama, harga, kategori});
-                localStorage.setItem('produk', JSON.stringify(produkList));
-                render();
+                menu.push({nama, harga});
+                localStorage.setItem('menu', JSON.stringify(menu));
+                renderMenu();
             }
         }
 
-        function render() {
-            document.getElementById('daftarProduk').innerHTML = produkList.map(p => 
-                `<p class="border-b py-2"><strong>[${p.kategori}]</strong> ${p.nama} - Rp${p.harga}</p>`).join('');
+        function klikProduk(index) {
+            keranjang.push(menu[index]);
+            renderKeranjang();
         }
+
+        function resetKeranjang() {
+            keranjang = [];
+            renderKeranjang();
+        }
+
+        function renderMenu() {
+            document.getElementById('menuBarang').innerHTML = menu.map((p, i) => 
+                `<button onclick="klikProduk(${i})" class="bg-white p-4 rounded shadow text-center border hover:bg-gray-50">
+                    <p class="font-bold">${p.nama}</p>
+                    <p class="text-sm text-gray-600">Rp${p.harga}</p>
+                </button>`).join('');
+        }
+
+        function renderKeranjang() {
+            let total = 0;
+            document.getElementById('keranjang').innerHTML = keranjang.map(p => {
+                total += p.harga;
+                return `<p class="text-sm">${p.nama} - Rp${p.harga}</p>`;
+            }).join('');
+            document.getElementById('totalHarga').innerText = "Total: Rp" + total;
+        }
+
+        renderMenu();
     </script>
 </body>
 </html>
